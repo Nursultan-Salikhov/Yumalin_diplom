@@ -114,6 +114,7 @@ BLE_ADVERTISING_DEF(m_advertising);                                             
 APP_TIMER_DEF(m_our_char_timer_id);
 #define OUR_CHAR_TIMER_INTERVAL     APP_TIMER_TICKS(1000) // 1000 ms intervals
 
+uint32_t a = 304;
 static ble_pis_t  m_pi_service;
 static uint16_t   m_conn_handle          = BLE_CONN_HANDLE_INVALID;                 /**< Handle of the current connection. */
 static uint16_t   m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;            /**< Maximum length of data (in bytes) that can be transmitted to the peer by the Nordic UART service module. */
@@ -127,11 +128,12 @@ static ble_uuid_t m_adv_uuids[]          =                                      
 
 static void timer_timeout_handler(void * p_context)
 {
+  a+=100;
   int32_t temperature = 0;   
   sd_temp_get(&temperature);
   if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
     {  
-      battery_level_char_update(&m_pi_service,&m_conn_handle,&temperature);
+      battery_level_char_update(&m_pi_service,&m_conn_handle,&a);
       nrf_gpio_pin_toggle(LED_4);
      
   }
