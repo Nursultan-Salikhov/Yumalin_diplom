@@ -114,7 +114,7 @@ BLE_ADVERTISING_DEF(m_advertising);                                             
 APP_TIMER_DEF(m_our_char_timer_id);
 #define OUR_CHAR_TIMER_INTERVAL     APP_TIMER_TICKS(1000) // 1000 ms intervals
 
-uint32_t a = 304;
+static _Bool flag_get_dist = 1 ; // for RCWL-0801, 
 static ble_pis_t  m_pi_service;
 static uint16_t   m_conn_handle          = BLE_CONN_HANDLE_INVALID;                 /**< Handle of the current connection. */
 static uint16_t   m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;            /**< Maximum length of data (in bytes) that can be transmitted to the peer by the Nordic UART service module. */
@@ -128,17 +128,15 @@ static ble_uuid_t m_adv_uuids[]          =                                      
 
 static void timer_timeout_handler(void * p_context)
 {
-  a+=100;
-  int32_t temperature = 0;   
-  sd_temp_get(&temperature);
-  if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
-    {  
-      battery_level_char_update(&m_pi_service,&m_conn_handle,&a);
-      nrf_gpio_pin_toggle(LED_4);
-     
-  }
+  if (flag_get_dist == 1)
+  {
+    uint8_t data_Tr = 0xA0;
+     app_uart_put(data_Tr);
+     flag_get_dist = 0;
+   }
+
    
-  printf("%d \r\n",temperature);
+ // printf("%d \r\n",temperature);
 
 }
 
@@ -505,7 +503,7 @@ void bsp_event_handler(bsp_event_t event)
 /**@snippet [Handling the data received over UART] */
 void uart_event_handle(app_uart_evt_t * p_event)
 {
-    static uint8_t data_array[BLE_NUS_MAX_DATA_LEN];
+    static uint8_t data_array[2];
     static uint8_t index = 0;
     uint32_t       err_code;
 
@@ -514,31 +512,20 @@ void uart_event_handle(app_uart_evt_t * p_event)
         case APP_UART_DATA_READY:
             UNUSED_VARIABLE(app_uart_get(&data_array[index]));
             index++;
-
-            if ((data_array[index - 1] == '\n') ||
-                (data_array[index - 1] == '\r') ||
-                (index >= m_ble_nus_max_data_len))
-            {
-                if (index > 1)
-                {
-                    NRF_LOG_DEBUG("Ready to send data over BLE NUS");
-                    NRF_LOG_HEXDUMP_DEBUG(data_array, index);
-
-                    do
-                    {
-                        uint16_t length = (uint16_t)index;
-                        err_code = ble_nus_data_send(&m_nus, data_array, &length, m_conn_handle);
-                        if ((err_code != NRF_ERROR_INVALID_STATE) &&
-                            (err_code != NRF_ERROR_RESOURCES) &&
-                            (err_code != NRF_ERROR_NOT_FOUND))
-                        {
-                            APP_ERROR_CHECK(err_code);
-                        }
-                    } while (err_code == NRF_ERROR_RESOURCES);
-                }
-
-                index = 0;
-            }
+	    if (index >= 2 )
+	    {
+	      
+	      int32_t temperature = ((uint16_t)data_array[0] << 8) | data_array[1];
+	      //sd_temp_get(&temperature);
+	       if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
+		    {  
+			battery_level_char_update(&m_pi_service,&m_conn_handle,&temperature);
+			nrf_gpio_pin_toggle(LED_4);
+			
+		    }
+		flag_get_dist = 1;
+		index = 0;
+	    }
             break;
 
         case APP_UART_COMMUNICATION_ERROR:
@@ -571,7 +558,7 @@ static void uart_init(void)
         .flow_control = APP_UART_FLOW_CONTROL_DISABLED,
         .use_parity   = false,
 #if defined (UART_PRESENT)
-        .baud_rate    = NRF_UART_BAUDRATE_115200
+        .baud_rate    =  NRF_UART_BAUDRATE_9600
 #else
         .baud_rate    = NRF_UARTE_BAUDRATE_115200
 #endif
@@ -701,7 +688,6 @@ int main(void)
 
 
     // Start execution.
-    printf("\r\nUART started.\r\n");
     advertising_start();
 
     // Enter main loop.

@@ -184,6 +184,5 @@ void peripheral_info_serv_init (ble_pis_t *p_service)
        uint32_t err_code;
        
        err_code = sd_ble_gatts_hvx(*conn_handle_in, &hvx_params);
-       printf("%d \r\n",err_code);
 
 }
