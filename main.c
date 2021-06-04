@@ -51,6 +51,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include "nrf_drv_twi.h"
 #include "nordic_common.h"
 #include "nrf.h"
 #include "ble_hci.h"
@@ -68,6 +69,8 @@
 #include "app_util_platform.h"
 #include "bsp_btn_ble.h"
 #include "nrf_pwr_mgmt.h"
+
+#define TWI_INSTANCE_ID     0
 
 #include "my_services.h"
 
@@ -114,7 +117,10 @@ BLE_ADVERTISING_DEF(m_advertising);                                             
 APP_TIMER_DEF(m_our_char_timer_id);
 #define OUR_CHAR_TIMER_INTERVAL     APP_TIMER_TICKS(1000) // 1000 ms intervals
 
-static _Bool flag_get_dist = 1 ; // for RCWL-0801, 
+static uint32_t m_sample;
+static uint8_t light_data[2];
+static _Bool flag_get_light = true;
+static _Bool flag_get_dist = true ; // for RCWL-0801, 
 static ble_pis_t  m_pi_service;
 static uint16_t   m_conn_handle          = BLE_CONN_HANDLE_INVALID;                 /**< Handle of the current connection. */
 static uint16_t   m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;            /**< Maximum length of data (in bytes) that can be transmitted to the peer by the Nordic UART service module. */
@@ -122,9 +128,13 @@ static ble_uuid_t m_adv_uuids[]          =                                      
 {
     {BLE_UUID_MY_DEVICE_SERVICE_UUID,BLE_UUID_TYPE_VENDOR_BEGIN}
 };
+  
+  static const nrf_drv_twi_t m_twi = NRF_DRV_TWI_INSTANCE(TWI_INSTANCE_ID);
 //------------------------------------------------------------------------------------------------------
 
-
+/**
+ * @brief Timer
+ */
 
 static void timer_timeout_handler(void * p_context)
 {
@@ -134,10 +144,61 @@ static void timer_timeout_handler(void * p_context)
      app_uart_put(data_Tr);
      flag_get_dist = 0;
    }
-
+   if (flag_get_light == true )
+   {
+     nrf_drv_twi_rx(&m_twi, 0x23, &light_data, sizeof(light_data));
+     flag_get_light = false;
+     			       if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
+		    {  
+			battery_level_char_update(&m_pi_service,&m_conn_handle,&m_sample);
+			nrf_gpio_pin_toggle(LED_4);
+			
+		    }
+   }
    
- // printf("%d \r\n",temperature);
+}
+ 
+ /**
+ * @brief TWI events handler.
+ */
+void twi_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
+{
+      switch (p_event->type)
+    {
+        case NRF_DRV_TWI_EVT_DONE:
+            if (p_event->xfer_desc.type == NRF_DRV_TWI_XFER_RX)
+            {
+		m_sample = (light_data[0]<<8)+light_data[1];
+		m_sample = m_sample/ 1.2;
+		flag_get_light = true;
 
+            }
+          
+            break;
+        default:
+            break;
+    }
+}
+
+/**
+ * @brief TWI initialization.
+ */
+void twi_init (void)
+{
+    ret_code_t err_code;
+
+    const nrf_drv_twi_config_t twi_lm75b_config = {
+       .scl                = ARDUINO_SCL_PIN,
+       .sda                = ARDUINO_SDA_PIN,
+       .frequency          = NRF_DRV_TWI_FREQ_250K,
+       .interrupt_priority = APP_IRQ_PRIORITY_HIGH,
+       .clear_bus_init     = false
+    };
+
+    err_code = nrf_drv_twi_init(&m_twi, &twi_lm75b_config, twi_handler, NULL);
+    APP_ERROR_CHECK(err_code);
+
+    nrf_drv_twi_enable(&m_twi);
 }
 
 /**@brief Function for assert macro callback.
@@ -672,6 +733,7 @@ int main(void)
     bool erase_bonds;
     // Initialize.
     uart_init();
+    twi_init();
     log_init();
     timers_init();
     buttons_leds_init(&erase_bonds);
@@ -682,6 +744,10 @@ int main(void)
     services_init();
     advertising_init();
     conn_params_init();
+    nrf_drv_twi_tx(&m_twi, 0x23,0x01,1, false);
+    nrf_drv_twi_tx(&m_twi, 0x23, 0x07,1, false);
+    nrf_drv_twi_tx(&m_twi, 0x23, 0x10,1, false);
+
     
     app_timer_create(&m_our_char_timer_id, APP_TIMER_MODE_REPEATED, timer_timeout_handler);
     app_timer_start(m_our_char_timer_id, OUR_CHAR_TIMER_INTERVAL, NULL);
