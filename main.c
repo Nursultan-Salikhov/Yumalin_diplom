@@ -69,10 +69,8 @@
 #include "app_util_platform.h"
 #include "bsp_btn_ble.h"
 #include "nrf_pwr_mgmt.h"
-
 #include "nrf_delay.h"
 
-//#define TWI_INSTANCE_ID     0
 
 #include "my_services.h"
 
@@ -125,15 +123,15 @@ static uint32_t m_sample = 0;
 static uint8_t light_data[2];
 static _Bool flag_get_light = false;
 static _Bool flag_get_dist = true ; // for RCWL-0801, 
-static ble_pis_t  m_pi_service;
+static ble_pis_t  m_pi_service;   //struct for periph. info service 
+static ble_ds_t	  m_dist_serv;	  // for distance service 
+static ble_es_t	  m_env_serv;   // enviroment service 
 static uint16_t   m_conn_handle          = BLE_CONN_HANDLE_INVALID;                 /**< Handle of the current connection. */
 static uint16_t   m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;            /**< Maximum length of data (in bytes) that can be transmitted to the peer by the Nordic UART service module. */
 static ble_uuid_t m_adv_uuids[]          =                                          /**< Universally unique service identifier. */
 {
     {BLE_UUID_MY_DEVICE_SERVICE_UUID,BLE_UUID_TYPE_VENDOR_BEGIN}
 };
-  
-  static const nrf_drv_twi_t m_twi = NRF_DRV_TWI_INSTANCE(TWI_INSTANCE_ID);
 //------------------------------------------------------------------------------------------------------
 
 /**
@@ -148,73 +146,26 @@ static void timer_timeout_handler(void * p_context)
      app_uart_put(data_Tr);
      flag_get_dist = 0;
    }
-   //if (flag_get_light == true )
-   //{
-   //nrf_drv_twi_rx(&m_twi, 0x23, &light_data, sizeof(light_data));
-   //flag_get_light = false;
-   // 			       if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
-		 //   {  
-			//battery_level_char_update(&m_pi_service,&m_conn_handle,&m_sample);
-			
-			
-		 //  }
-   //}
    if (bh1750_read(&m_sample)==true)
-    {
-            			       if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
-		  {  
-			battery_level_char_update(&m_pi_service,&m_conn_handle,&m_sample);
-			nrf_gpio_pin_toggle(LED_4);
-		    }
-		     bh1750_get_light();
-    }
+   {
+      if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
+      {  
+	  lightness_char_update(&m_env_serv,&m_conn_handle,&m_sample);
+	  nrf_gpio_pin_toggle(LED_4);
+      }
+      bh1750_get_light();
+   }
+  int32_t temperature = 0;   
+  sd_temp_get(&temperature);
+  if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
+  {
+    temperature = temperature / 4;
+    temperature_char_update(&m_env_serv,&m_conn_handle,&temperature);
+  }
 }
  
- /**
- * @brief TWI events handler.
- */
-void twi_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
-{
-      switch (p_event->type)
-    {
-        case NRF_DRV_TWI_EVT_DONE:
-            if (p_event->xfer_desc.type == NRF_DRV_TWI_XFER_RX)
-            {
-		m_sample = (light_data[0]<<8)+light_data[1];
-		m_sample = m_sample/ 1.2;
-		flag_get_light = true;
-		nrf_gpio_pin_toggle(LED_4);
 
-            }
-          
-            break;
-        default:
-            break;
-    }
-}
-
-/**
- * @brief TWI initialization.
- */
-void twi_init (void)
-{
-    ret_code_t err_code;
-
-    const nrf_drv_twi_config_t twi_lm75b_config = {
-       .scl                = ARDUINO_SCL_PIN,
-       .sda                = ARDUINO_SDA_PIN,
-       .frequency          = NRF_DRV_TWI_FREQ_400K,
-       .interrupt_priority = APP_IRQ_PRIORITY_HIGH,
-       .clear_bus_init     = false
-    };
-
-    err_code = nrf_drv_twi_init(&m_twi, &twi_lm75b_config, twi_handler, NULL);
-    APP_ERROR_CHECK(err_code);
-
-    nrf_drv_twi_enable(&m_twi);
-}
-
-/**@brief Function for assert macro callback.
+/**@brief Functin for assert macro callback.
  *
  * @details This function will be called in case of an assert in the SoftDevice.
  *
@@ -301,6 +252,8 @@ static void services_init(void)
 
     // Initialize service
     peripheral_info_serv_init(&m_pi_service);
+    distance_serv_init(&m_dist_serv);
+    enviroment_serv_init(&m_env_serv);
 
 
 }
@@ -589,11 +542,10 @@ void uart_event_handle(app_uart_evt_t * p_event)
 	    if (index >= 2 )
 	    {
 	      
-	      int32_t temperature = ((uint16_t)data_array[0] << 8) | data_array[1];
-	      //sd_temp_get(&temperature);
+	      int32_t m_dist_data = ((uint16_t)data_array[0] << 8) | data_array[1];
 	       if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
 		    {  
-			battery_level_char_update(&m_pi_service,&m_conn_handle,&temperature);
+			current_distance_char_update(&m_dist_serv,&m_conn_handle,& m_dist_data);
 			nrf_gpio_pin_toggle(LED_4);
 			
 		    }
@@ -742,27 +694,11 @@ static void advertising_start(void)
 /**@brief Application main function.
  */
 int main(void)
-{
-   //   APP_ERROR_CHECK(NRF_LOG_INIT(NULL));
-   // NRF_LOG_DEFAULT_BACKENDS_INIT();
-   //       twi_init();
-	  //nrf_delay_us(100000);
-	  //  uint8_t d = 0x01;
-   // nrf_drv_twi_tx(&m_twi,0x23, &d,sizeof(d), false);
-   // nrf_delay_us(100000);
-   // d = 0x07;
-   // nrf_drv_twi_tx(&m_twi, 0x23,&d,sizeof(d), false);
-   // nrf_delay_us(100000);
-   // d = 0x10;
-   // nrf_drv_twi_tx(&m_twi, 0x23,&d,sizeof(d), false);
-   // nrf_delay_us(100000);
-   
+{ 
     bool erase_bonds;
     // Initialize.
     uart_init();
     bh1750_init(BH_CHR_MODE);
-
-
     log_init();
     timers_init();
     buttons_leds_init(&erase_bonds);
@@ -782,10 +718,9 @@ int main(void)
 
     // Start execution.
     advertising_start();
-     //bh1750_get_light();
 
     // Enter main loop.
-    //nrf_drv_twi_rx(&m_twi, 0x23, &light_data, sizeof(light_data));
+  
     for (;;)
     {
 	

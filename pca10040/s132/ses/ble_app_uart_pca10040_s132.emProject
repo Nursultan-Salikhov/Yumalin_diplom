@@ -128,6 +128,8 @@
     <folder Name="Services">
       <file file_name="../../../services/peripheral_info_service.c" />
       <configuration Name="Release" analyze_after_compile="No" />
+      <file file_name="../../../services/distance_service.c" />
+      <file file_name="../../../services/environment_service.c" />
     </folder>
     <folder Name="peripheral">
       <file file_name="../../../bh1750/bh1750.c" />

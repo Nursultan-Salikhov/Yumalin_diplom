@@ -162,7 +162,7 @@ void peripheral_info_serv_init (ble_pis_t *p_service)
     
     // add characteristic 
     fv_char_add(p_service);
-    battery_level_char_add(p_service);
+    //battery_level_char_add(p_service);
     
 }
 
