@@ -137,13 +137,6 @@ static ble_uuid_t m_adv_uuids[]          =                                      
 //------------------------------------------------------------------------------------------------------
 
 
-
-static void rcwl_0801_get_dist (void)
-{
-      uint8_t data_Tr = GET_DIST_COMM;
-     app_uart_put(data_Tr);
-     flag_get_dist = 0;
-}
 /**
  * @brief Timer
  */
@@ -152,7 +145,9 @@ static void timer_timeout_handler(void * p_context)
 {
   if (flag_get_dist == 1)  // if data on the distance is received, we form a new request
   {
-    rcwl_0801_get_dist();
+     uint8_t data_Tr = GET_DIST_COMM;
+     app_uart_put(data_Tr);
+     flag_get_dist = 0;
    }
    if (bh1750_read(&m_sample)==true) // reading light data
    {
@@ -162,7 +157,7 @@ static void timer_timeout_handler(void * p_context)
       }
       bh1750_get_light(); // form new request for light data
    }
-  int16_t temperature = 0;   
+  int32_t temperature = 0;   
   sd_temp_get(&temperature);
   if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
   {
