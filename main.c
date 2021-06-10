@@ -109,6 +109,7 @@
 
 #define UART_TX_BUF_SIZE                256                                         /**< UART TX buffer size. */
 #define UART_RX_BUF_SIZE                256                                         /**< UART RX buffer size. */
+#define GET_DIST_COMM			0xA0					    /**< command for RCWL-0801. */
 
 
 BLE_NUS_DEF(m_nus, NRF_SDH_BLE_TOTAL_LINK_COUNT);                                   /**< BLE NUS service instance. */
@@ -117,45 +118,51 @@ NRF_BLE_QWR_DEF(m_qwr);                                                         
 BLE_ADVERTISING_DEF(m_advertising);                                                 /**< Advertising module instance. */
 
 APP_TIMER_DEF(m_our_char_timer_id);
-#define OUR_CHAR_TIMER_INTERVAL     APP_TIMER_TICKS(1000) // 1000 ms intervals
+#define OUR_CHAR_TIMER_INTERVAL     APP_TIMER_TICKS(250)			    // 250 ms intervals
 
-static uint32_t m_sample = 0;
+static uint16_t m_sample = 0;
 static uint8_t light_data[2];
 static _Bool flag_get_light = false;
 static _Bool flag_get_dist = true ; // for RCWL-0801, 
 static ble_pis_t  m_pi_service;   //struct for periph. info service 
 static ble_ds_t	  m_dist_serv;	  // for distance service 
 static ble_es_t	  m_env_serv;   // enviroment service 
+static ble_is_t	  m_ind_serv;	// indication service  
 static uint16_t   m_conn_handle          = BLE_CONN_HANDLE_INVALID;                 /**< Handle of the current connection. */
-static uint16_t   m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;            /**< Maximum length of data (in bytes) that can be transmitted to the peer by the Nordic UART service module. */
+static uint16_t   m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;            /**< Maximum length of data (in bytes) that can be transmitted to the peer by the UART  module. */
 static ble_uuid_t m_adv_uuids[]          =                                          /**< Universally unique service identifier. */
 {
     {BLE_UUID_MY_DEVICE_SERVICE_UUID,BLE_UUID_TYPE_VENDOR_BEGIN}
 };
 //------------------------------------------------------------------------------------------------------
 
+
+
+static void rcwl_0801_get_dist (void)
+{
+      uint8_t data_Tr = GET_DIST_COMM;
+     app_uart_put(data_Tr);
+     flag_get_dist = 0;
+}
 /**
  * @brief Timer
  */
 
 static void timer_timeout_handler(void * p_context)
 {
-  if (flag_get_dist == 1)
+  if (flag_get_dist == 1)  // if data on the distance is received, we form a new request
   {
-    uint8_t data_Tr = 0xA0;
-     app_uart_put(data_Tr);
-     flag_get_dist = 0;
+    rcwl_0801_get_dist();
    }
-   if (bh1750_read(&m_sample)==true)
+   if (bh1750_read(&m_sample)==true) // reading light data
    {
-      if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
+      if (m_conn_handle != BLE_CONN_HANDLE_INVALID) // check connection
       {  
 	  lightness_char_update(&m_env_serv,&m_conn_handle,&m_sample);
-	  nrf_gpio_pin_toggle(LED_4);
       }
-      bh1750_get_light();
+      bh1750_get_light(); // form new request for light data
    }
-  int32_t temperature = 0;   
+  int16_t temperature = 0;   
   sd_temp_get(&temperature);
   if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
   {
@@ -250,10 +257,11 @@ static void services_init(void)
     err_code = nrf_ble_qwr_init(&m_qwr, &qwr_init);
     APP_ERROR_CHECK(err_code);
 
-    // Initialize service
+    // Initialize services
     peripheral_info_serv_init(&m_pi_service);
     distance_serv_init(&m_dist_serv);
     enviroment_serv_init(&m_env_serv);
+    indication_service_init(&m_ind_serv);
 
 
 }
@@ -422,6 +430,11 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
                                              BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
             APP_ERROR_CHECK(err_code);
             break;
+	    
+	case BLE_GATTS_EVT_WRITE:
+	    if (get_led_state(&m_ind_serv) >= 1) bsp_board_led_on(BSP_BOARD_LED_1);
+	    else bsp_board_led_off(BSP_BOARD_LED_1);
+	    break;
 
         default:
             // No implementation needed.
@@ -490,6 +503,7 @@ void gatt_init(void)
 void bsp_event_handler(bsp_event_t event)
 {
     uint32_t err_code;
+    static _Bool m_butt_state = false;
     switch (event)
     {
         case BSP_EVENT_SLEEP:
@@ -514,6 +528,13 @@ void bsp_event_handler(bsp_event_t event)
                 }
             }
             break;
+	 case BSP_EVENT_KEY_3:  //event button 4
+	    m_butt_state = (m_butt_state == true) ?  false:  true;  // state button 
+	    if (m_conn_handle != BLE_CONN_HANDLE_INVALID) // check connection 
+	    {
+	      button_char_update(&m_ind_serv,&m_conn_handle,&m_butt_state);   //update data in soft device
+	    }
+	    break;
 
         default:
             break;
@@ -709,21 +730,16 @@ int main(void)
     services_init();
     advertising_init();
     conn_params_init();
-
-
-     
+  
     app_timer_create(&m_our_char_timer_id, APP_TIMER_MODE_REPEATED, timer_timeout_handler);
     app_timer_start(m_our_char_timer_id, OUR_CHAR_TIMER_INTERVAL, NULL);
 
-
     // Start execution.
     advertising_start();
-
     // Enter main loop.
   
     for (;;)
     {
-	
         idle_state_handle();
     }
   

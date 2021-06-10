@@ -6,16 +6,16 @@
 #include "nrf_delay.h"
 
 #define TWI_INSTANCE_ID     0
-#define BH_SCL_PIN  27
-#define BH_SDA_PIN  26
-#define BH_INIT_DELAY 1000
+#define BH_SCL_PIN	    27
+#define BH_SDA_PIN	    26
+#define BH_INIT_DELAY	    1000
 
-#define BH_ADDR_L 0x23
-#define BH_ADDR_H 0x5C
+#define BH_ADDR_L	    0x23
+#define BH_ADDR_H	    0x5C
 
-#define BH1750_DOWN   		0x00
-#define BH1750_ON		0x01
-#define BH1750_RESET		0x07
+#define BH1750_DOWN	    0x00
+#define BH1750_ON	    0x01
+#define BH1750_RESET	    0x07
 
 typedef enum 
 {
@@ -41,12 +41,16 @@ typedef struct
 void bh1750_init (bh_operating_mode_t in);
 
 /**
- * @brief Function for illumination measurements.
- *
- * @return illumination value (in lux).
+ * @brief Illumination measurement request function.
  */
 
 void bh1750_get_light (void);
+
+  /**
+ * @brief Function for read illumination measurements.
+ * @param  *out,  result
+ * @retval ::xfer_done flage state,shows data status
+ */
 
 _Bool bh1750_read (uint16_t *out);
 

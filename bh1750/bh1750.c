@@ -46,15 +46,16 @@ void bh1750_init (bh_operating_mode_t in)
        .clear_bus_init     = false
     };
 
-    nrf_drv_twi_init(&m_twi_0, &twi_config, bh_twi_handler, NULL);
+    nrf_drv_twi_init(&m_twi_0, &twi_config, bh_twi_handler, NULL);  //TWI init
     APP_ERROR_CHECK(err_code);
 
-    nrf_drv_twi_enable(&m_twi_0);
+    nrf_drv_twi_enable(&m_twi_0);  // TWI enable 
     nrf_delay_us(BH_INIT_DELAY);
   
-    uint8_t comm_buff = BH1750_ON;
-    nrf_drv_twi_tx(&m_twi_0,BH_ADDR_L,&comm_buff,sizeof(comm_buff), false);
-    nrf_delay_us(BH_INIT_DELAY);
+    // init BH1750
+    uint8_t comm_buff = BH1750_ON; // buffer for sending command
+    nrf_drv_twi_tx(&m_twi_0,BH_ADDR_L,&comm_buff,sizeof(comm_buff), false);  // transmit function
+    nrf_delay_us(BH_INIT_DELAY);  //short delay, otherwise the device may miss the command
     
     comm_buff = BH1750_RESET;
     nrf_drv_twi_tx(&m_twi_0, BH_ADDR_L,&comm_buff,sizeof(comm_buff), false);

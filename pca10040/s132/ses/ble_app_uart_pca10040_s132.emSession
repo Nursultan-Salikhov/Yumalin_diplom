@@ -14,6 +14,7 @@
   <ProjectSessionItem path="BLE_APP_Yumalin"/>
   <ProjectSessionItem path="BLE_APP_Yumalin;Yumalin_diplom"/>
   <ProjectSessionItem path="BLE_APP_Yumalin;Yumalin_diplom;Application"/>
+  <ProjectSessionItem path="BLE_APP_Yumalin;Yumalin_diplom;Board Support"/>
   <ProjectSessionItem path="BLE_APP_Yumalin;Yumalin_diplom;peripheral"/>
   <ProjectSessionItem path="BLE_APP_Yumalin;Yumalin_diplom;Services"/>
  </Project>
@@ -40,17 +41,11 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="34" y="161" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../../main.c" selected="1" top="108" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="26" y="10" useTextEdit="1" openedFrom="C:/JOB/nordici/nRF5_SDK_17.0.2_d674dde/examples/ble_peripheral/Yumalin_diplom/main.c" useBinaryEdit="0" left="0" path="../../../bh1750/bh1750.h" selected="0" top="1" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="34" y="83" useTextEdit="1" openedFrom="C:/JOB/nordici/nRF5_SDK_17.0.2_d674dde/examples/ble_peripheral/Yumalin_diplom/main.c" useBinaryEdit="0" left="0" path="../../../bh1750/bh1750.c" selected="0" top="18" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="54" useTextEdit="1" openedFrom="C:/JOB/nordici/nRF5_SDK_17.0.2_d674dde/examples/ble_peripheral/Yumalin_diplom/bh1750/bh1750.c" useBinaryEdit="0" left="0" path="../../../../../../components/libraries/delay/nrf_delay.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="3" y="2108" useTextEdit="1" openedFrom="C:/JOB/nordici/nRF5_SDK_17.0.2_d674dde/examples/ble_peripheral/Yumalin_diplom/main.c" useBinaryEdit="0" left="0" path="../../../../../../components/softdevice/s132/headers/ble_gap.h" selected="0" top="2087" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="59" y="32" useTextEdit="1" openedFrom="C:/JOB/nordici/nRF5_SDK_17.0.2_d674dde/examples/ble_peripheral/Yumalin_diplom/main.c" useBinaryEdit="0" left="0" path="../../../services/my_services.h" selected="0" top="6" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="99" y="14" useTextEdit="1" openedFrom="C:/JOB/nordici/nRF5_SDK_17.0.2_d674dde/examples/ble_peripheral/Yumalin_diplom/services/my_services.h" useBinaryEdit="0" left="0" path="../../../services/distance_service.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="94" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../../services/distance_service.c" selected="0" top="69" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="32" y="20" useTextEdit="1" openedFrom="C:/JOB/nordici/nRF5_SDK_17.0.2_d674dde/examples/ble_peripheral/Yumalin_diplom/services/my_services.h" useBinaryEdit="0" left="0" path="../../../services/environment_service.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="32" y="175" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../../services/environment_service.c" selected="0" top="161" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="6" y="164" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../../services/peripheral_info_service.c" selected="0" top="144" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="30" y="144" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../../main.c" selected="1" top="124" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="49" y="36" useTextEdit="1" openedFrom="C:/JOB/nordici/nRF5_SDK_17.0.2_d674dde/examples/ble_peripheral/Yumalin_diplom/main.c" useBinaryEdit="0" left="0" path="../../../services/my_services.h" selected="0" top="6" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="43" y="17" useTextEdit="1" openedFrom="C:/JOB/nordici/nRF5_SDK_17.0.2_d674dde/examples/ble_peripheral/Yumalin_diplom/services/my_services.h" useBinaryEdit="0" left="0" path="../../../services/indication_service.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="30" y="86" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../../services/indication_service.c" selected="0" top="72" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="35" y="60" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../../services/peripheral_info_service.c" selected="0" top="0" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="Yumalin_diplom" fileDialogDefaultFilter="*.c;*.cpp;*.cxx;*.cc;*.h;*.hpp;*.hxx" autoConnectTarget="J-Link" buildConfiguration="Release" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/JOB/nordici/nRF5_SDK_17.0.2_d674dde/examples/ble_peripheral/Yumalin_diplom/services" debugSearchPath="" autoConnectCapabilities="3199"/>
 </session>

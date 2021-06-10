@@ -12,7 +12,7 @@
 #include "peripheral_info_service.h"
 #include "distance_service.h"
 #include "environment_service.h"
-
+#include "indication_service.h"
 
 
 
@@ -33,6 +33,9 @@
 #define BLE_UUID_TEMPERATURE_CHARACTERISTIC_UUID	     0x1542
 #define BLE_UUID_LIGHTNESS_CHARACTERISTIC_UUID		     0x1533
 
+#define BLE_UUID_INDICATION_SERVICE_UUID		     0x1529
+#define BLE_UUID_BUTTON_STATE_CHARACTERISTIC_UUID	     0x1524
+#define BLE_UUID_LED_STATE_CHARACTERISTIC_UUID		     0x1525
 
 
 
@@ -43,6 +46,4 @@
 
 
 
-
-
-#endif  MY_SERVICES_H__
+#endif // MY_SERVICES_H__

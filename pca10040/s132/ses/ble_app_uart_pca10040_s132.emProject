@@ -130,6 +130,7 @@
       <configuration Name="Release" analyze_after_compile="No" />
       <file file_name="../../../services/distance_service.c" />
       <file file_name="../../../services/environment_service.c" />
+      <file file_name="../../../services/indication_service.c" />
     </folder>
     <folder Name="peripheral">
       <file file_name="../../../bh1750/bh1750.c" />
